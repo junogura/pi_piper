@@ -46,6 +46,26 @@ module PiPiper
       Platform.driver.i2c_read_bytes(bytes)
     end
 
+    def read_register(params)
+      reg = params[:reg]
+      reg = [reg] unless reg.class.include? Enumerable
+      address = params[:from]
+      bytes = params[:bytes] || 1
+
+      Platform.driver.i2c_set_address address
+      Platform.driver.i2c_read_register(reg, bytes)
+    end
+
+    def write_read(params)
+      cmds = params[:cmds]
+      cmds = [cmds] unless cmds.class.include? Enumerable
+      address = params[:with]
+      bytes = params[:bytes]
+
+      Platform.driver.i2c_set_address address
+      Platform.driver.i2c_write_read(cmds, bytes)
+    end
+
   end
 
 end

@@ -131,6 +131,8 @@ module PiPiper
     attach_function :i2c_set_address,:bcm2835_i2c_setSlaveAddress,   [:uint8], :void
     attach_function :i2c_set_clock_divider, :bcm2835_i2c_setClockDivider,     [:uint16], :void
     attach_function :i2c_read,       :bcm2835_i2c_read,              [:pointer, :uint], :uint8
+    attach_function :i2c_read_register_rs, :bcm2835_i2c_read_register_rs, [:pointer, :pointer, :uint], :uint8
+    attach_function :i2c_write_read_rs, :bcm2835_i2c_write_read_rs,     [:pointer, :uint, :pointer, :uint], :uint8
 
     def self.i2c_allowed_clocks
       [100.kilohertz,
@@ -161,6 +163,24 @@ module PiPiper
       i2c_read(data_in, bytes) #TODO reason codes 
 
       (0..bytes-1).map { |i| data_in.get_uint8(i) } 
+    end
+
+    def self.i2c_read_register(reg_addr, bytes)
+      data_in = FFI::MemoryPointer.new(bytes)
+      data_out = FFI::MemoryPointer.new(reg_addr.count)
+      (0..reg_addr.count-1).each{ |i| data_out.put_uint8(i, reg_addr[i]) }
+      i2c_read_register_rs(data_out, data_in, bytes)
+
+      (0..bytes-1).map { |i| data_in.get_uint8(i) }
+    end
+
+    def self.i2c_write_read(cmds, bytes)
+      data_in = FFI::MemoryPointer.new(bytes)
+      data_out = FFI::MemoryPointer.new(cmds.count)
+      (0..cmds.count-1).each{ |i| data_out.put_uint8(i, cmds[i]) }
+      i2c_write_read_rs(data_out, cmds.length, data_in, bytes)
+
+      (0..bytes-1).map { |i| data_in.get_uint8(i) }
     end
   end
 end
